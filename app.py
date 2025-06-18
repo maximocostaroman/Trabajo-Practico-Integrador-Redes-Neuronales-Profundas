@@ -1,6 +1,6 @@
 # app.py
 import streamlit as st
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import torch
 from torchvision import transforms
 from facenet_pytorch import MTCNN
@@ -16,6 +16,16 @@ model.eval().to(device)
 
 # Emociones
 class_names = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+# Colores para cada emoción (pueden cambiarse)
+emotion_colors = {
+    'Angry': '#E63946',
+    'Disgust': '#6A994E',
+    'Fear': '#9A8C98',
+    'Happy': '#F4D35E',
+    'Sad': '#457B9D',
+    'Surprise': '#F9844A',
+    'Neutral': '#A8A7A7'
+}
 
 # Detector de caras
 mtcnn = MTCNN(keep_all=True, device=device, post_process=True)
@@ -27,9 +37,17 @@ transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
-# Streamlit UI
-st.title("Detector de emociones faciales 😄😠😢")
-uploaded_file = st.file_uploader("Subí una foto grupal", type=["jpg", "jpeg", "png"])
+# --- Streamlit UI ---
+
+# Encabezado con estilo y emojis
+st.markdown(
+    """
+    <h1 style='text-align:center; color:#3B4252; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;'>
+        🎭 Detector de emociones faciales 😄😠😢
+    </h1>
+    """, unsafe_allow_html=True)
+
+uploaded_file = st.file_uploader("Subí una foto grupal (jpg, jpeg, png)", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
@@ -38,29 +56,17 @@ if uploaded_file is not None:
     boxes, _ = mtcnn.detect(image)
 
     if boxes is None:
-        st.warning("No se detectaron caras.")
+        st.warning("No se detectaron caras. 🤔 Intentá con otra foto.")
     else:
+        st.success(f"Se detectaron {len(boxes)} cara(s) 👀")
+
         draw = ImageDraw.Draw(image)
+        # Fuente para texto (ajustá el path si usás Colab u otro entorno)
+        try:
+            font = ImageFont.truetype("arial.ttf", size=22)
+        except:
+            font = ImageFont.load_default()
 
         for i, box in enumerate(boxes):
             face = image.crop(box).convert("L").resize((48, 48))
-            input_tensor = transform(face).unsqueeze(0).to(device)
-
-            with torch.no_grad():
-                output = model(input_tensor)
-                probs = torch.nn.functional.softmax(output, dim=1)[0]
-                pred = torch.argmax(probs).item()
-                emotion = class_names[pred]
-                topk = torch.topk(probs, 3)
-                top_emotions = [(class_names[i], float(p) * 100) for i, p in zip(topk.indices, topk.values)]
-
-            # Dibujo en la imagen
-            draw.rectangle(box.tolist(), outline="red", width=2)
-            text = f"{emotion} ({top_emotions[0][1]:.1f}%)"
-            draw.text((box[0], box[1] - 10), text, fill="red")
-
-            # Mostrar tabla con top-3 emociones en Streamlit
-            st.write(f"🧠 **Predicción para rostro #{i+1}**: {emotion}")
-            st.table(pd.DataFrame(top_emotions, columns=["Emoción", "Confianza (%)"]))
-
-        st.image(image, caption="Emociones detectadas", use_column_width=True)
+            input
