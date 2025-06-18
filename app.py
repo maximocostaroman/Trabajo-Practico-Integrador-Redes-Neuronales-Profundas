@@ -51,7 +51,7 @@ if uploaded_file is not None:
         draw = ImageDraw.Draw(image)
 
     try:
-        font = ImageFont.truetype("Roboto-Regular.ttf", size=40)
+        font = ImageFont.truetype("Roboto-Regular.ttf", size=20)
     except:
         font = ImageFont.load_default()
 
