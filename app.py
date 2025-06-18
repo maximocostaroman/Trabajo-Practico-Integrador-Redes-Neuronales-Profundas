@@ -50,10 +50,14 @@ if uploaded_file is not None:
     else:
         draw = ImageDraw.Draw(image)
 
+    from PIL import ImageFont
+
     try:
-        font = ImageFont.truetype("Roboto-Regular.ttf", size=20)
-    except:
+        font = ImageFont.truetype("Roboto-Regular.ttf", size=40)
+    except Exception as e:
+        st.error(f"No se pudo cargar la fuente: {e}")
         font = ImageFont.load_default()
+
 
 
         for box in boxes:
