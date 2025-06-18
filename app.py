@@ -51,7 +51,7 @@ if uploaded_file is not None:
         draw = ImageDraw.Draw(image)
 
     try:
-        font = ImageFont.truetype("arial.ttf", size=20) 
+        font = ImageFont.truetype("arial.ttf", size=100) 
     except:
         font = ImageFont.load_default()
 
