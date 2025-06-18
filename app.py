@@ -50,6 +50,12 @@ if uploaded_file is not None:
     else:
         draw = ImageDraw.Draw(image)
 
+    try:
+        font = ImageFont.truetype("arial.ttf", size=20) 
+    except:
+        font = ImageFont.load_default()
+
+
         for box in boxes:
             face = image.crop(box).convert("L").resize((48, 48))
             input_tensor = transform(face).unsqueeze(0).to(device)
@@ -58,7 +64,8 @@ if uploaded_file is not None:
                 pred = torch.argmax(output, dim=1).item()
                 emotion = class_names[pred]
 
-            draw.rectangle(box.tolist(), outline="red", width=2)
-            draw.text((box[0], box[1] - 10), emotion, fill="red")
+            draw.rectangle(box.tolist(), outline="red", width=5)
+            draw.text((box[0], box[1] - 10), emotion, fill="red", font=font)
+
 
         st.image(image, caption="Emociones detectadas", use_column_width=True)
