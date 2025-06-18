@@ -62,6 +62,8 @@ if uploaded_file is not None:
         except:
             font = ImageFont.load_default()
 
+        resultados = []  # Para guardar resultados y mostrar tablas luego
+
         for i, box in enumerate(boxes):
             face = image.crop(box).convert("L").resize((48, 48))
             input_tensor = transform(face).unsqueeze(0).to(device)
@@ -76,17 +78,25 @@ if uploaded_file is not None:
 
             color = emotion_colors.get(emotion, "red")
 
-            draw.rectangle(box.tolist(), outline=color, width=3)
-            text = f"{emotion} ({top_emotions[0][1]:.1f}%)"
-            draw.text((box[0], box[1] - 28), text, fill=color, font=font)
+            # Dibujar caja más gruesa (grosor=5)
+            draw.rectangle(box.tolist(), outline=color, width=5)
+            # Etiqueta persona arriba de la caja
+            etiqueta = f"Persona #{i+1}: {emotion} ({top_emotions[0][1]:.1f}%)"
+            draw.text((box[0], box[1] - 30), etiqueta, fill=color, font=font)
 
-            st.markdown(f"### 🧠 Predicción para rostro #{i+1}: <span style='color:{color};'>{emotion}</span>", unsafe_allow_html=True)
+            # Guardar resultados para mostrar tabla luego
+            resultados.append((i+1, emotion, color, top_emotions))
 
-            df_emotions = pd.DataFrame(top_emotions, columns=["Emoción", "Confianza (%)"])
-            df_emotions["Confianza (%)"] = df_emotions["Confianza (%)"].map(lambda x: f"{x:.1f}%")
-            st.table(df_emotions)
-
+        # Mostrar imagen con cajas y etiquetas
         st.image(image, caption="Emociones detectadas 🎉", use_container_width=True)
+
+        # Mostrar todas las tablas juntas al final
+        st.markdown("## Resultados detallados por persona")
+        for persona_num, emocion_pred, color, emociones_top in resultados:
+            st.markdown(f"### 🧠 Persona #{persona_num}: <span style='color:{color};'>{emocion_pred}</span>", unsafe_allow_html=True)
+            df_emociones = pd.DataFrame(emociones_top, columns=["Emoción", "Confianza (%)"])
+            df_emociones["Confianza (%)"] = df_emociones["Confianza (%)"].map(lambda x: f"{x:.1f}%")
+            st.table(df_emociones)
 
 st.markdown("---")
 st.markdown("<p style='text-align:center; color:gray;'>💡 Pro tip: ¡Sonreí para que te detecte 'Happy'! 😄</p>", unsafe_allow_html=True)
