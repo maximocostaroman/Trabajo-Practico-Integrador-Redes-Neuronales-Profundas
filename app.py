@@ -43,10 +43,20 @@ st.markdown(
     </h1>
     """, unsafe_allow_html=True)
 
+# Opción para cargar archivo o tomar foto con cámara
 uploaded_file = st.file_uploader("Subí una foto grupal (jpg, jpeg, png)", type=["jpg", "jpeg", "png"])
 
+photo = None
+if st.button("Tomar foto con cámara 📷"):
+    photo = st.camera_input("Sacar foto")
+
+image = None
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
+elif photo is not None:
+    image = Image.open(photo).convert("RGB")
+
+if image is not None:
     st.image(image, caption="Imagen original", use_container_width=True)
 
     boxes, _ = mtcnn.detect(image)
@@ -54,6 +64,10 @@ if uploaded_file is not None:
     if boxes is None:
         st.warning("No se detectaron caras. 🤔 Intentá con otra foto.")
     else:
+        # Ordenar cajas de izquierda a derecha
+        idx_sort = boxes[:, 0].argsort()
+        boxes = boxes[idx_sort]
+
         st.success(f"Se detectaron {len(boxes)} cara(s) 👀")
 
         draw = ImageDraw.Draw(image)
@@ -62,7 +76,7 @@ if uploaded_file is not None:
         except:
             font = ImageFont.load_default()
 
-        resultados = []  # Para guardar resultados y mostrar tablas luego
+        resultados = []
 
         for i, box in enumerate(boxes):
             face = image.crop(box).convert("L").resize((48, 48))
@@ -78,19 +92,14 @@ if uploaded_file is not None:
 
             color = emotion_colors.get(emotion, "red")
 
-            # Dibujar caja más gruesa (grosor=5)
             draw.rectangle(box.tolist(), outline=color, width=5)
-            # Etiqueta persona arriba de la caja
             etiqueta = f"Persona #{i+1}: {emotion} ({top_emotions[0][1]:.1f}%)"
             draw.text((box[0], box[1] - 30), etiqueta, fill=color, font=font)
 
-            # Guardar resultados para mostrar tabla luego
             resultados.append((i+1, emotion, color, top_emotions))
 
-        # Mostrar imagen con cajas y etiquetas
         st.image(image, caption="Emociones detectadas 🎉", use_container_width=True)
 
-        # Mostrar todas las tablas juntas al final
         st.markdown("## Resultados detallados por persona")
         for persona_num, emocion_pred, color, emociones_top in resultados:
             st.markdown(f"### 🧠 Persona #{persona_num}: <span style='color:{color};'>{emocion_pred}</span>", unsafe_allow_html=True)
