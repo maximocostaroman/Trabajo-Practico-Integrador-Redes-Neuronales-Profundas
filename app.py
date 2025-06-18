@@ -53,12 +53,20 @@ if uploaded_file is not None:
         for box in boxes:
             face = image.crop(box).convert("L").resize((48, 48))
             input_tensor = transform(face).unsqueeze(0).to(device)
-            with torch.no_grad():
-                output = model(input_tensor)
-                pred = torch.argmax(output, dim=1).item()
-                emotion = class_names[pred]
+           with torch.no_grad():
+            output = model(input_tensor)
+            probs = torch.nn.functional.softmax(output, dim=1)[0]  # ← Aquí obtenés probabilidades
+            pred = torch.argmax(probs).item()
+            emotion = class_names[pred]
 
+            # Dibujo en la imagen
             draw.rectangle(box.tolist(), outline="red", width=2)
-            draw.text((box[0], box[1] - 10), emotion, fill="red")
+            text = f"{emotion} ({top_emotions[0][1]:.1f}%)"
+            draw.text((box[0], box[1] - 10), text, fill="red")
 
-        st.image(image, caption="Emociones detectadas", use_column_width=True)
+            #draw.rectangle(box.tolist(), outline="red", width=2)
+            #draw.text((box[0], box[1] - 10), emotion, fill="red")
+
+            # Mostrar tabla con top-3 emociones en Streamlit
+    st.write(f"🧠 **Predicción para rostro**: {emotion}")
+    st.table(pd.DataFrame(top_emotions, columns=["Emoción", "Confianza (%)"]))
