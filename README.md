@@ -1,4 +1,4 @@
-Clasificación de emociones faciales en imágenes con múltiples rostros
+#**Clasificación de emociones faciales en imágenes con múltiples rostros**
 Trabajo Práctico Integrador Redes Neuronales Profundas
 
 Integrantes del grupo:
